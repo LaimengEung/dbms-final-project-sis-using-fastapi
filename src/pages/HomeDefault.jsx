@@ -5,21 +5,20 @@ function Home() {
                                     
   return (
     <div style={{ textAlign: "center", marginTop: "100px" }}>
-      <h1>Admin Menu</h1>
 
-      <button onClick={() => navigate("/admin")}>
-        Dashboard
+      <button style={{ backgroundColor: "blue", color: "white" }} onClick={() => navigate("/admin")}>
+        Admin
       </button>
 
       <br /><br />
 
-      <button onClick={() => navigate("/admin/users")}>
-        Manage Users
+      <button style={{ backgroundColor: "blue", color: "white" }} onClick={() => navigate("/faculty")}>
+        Faculty
       </button>
 
       <br /><br />
 
-      <button onClick={() => navigate("/admin/students")}>
+      {/* <button onClick={() => navigate("/admin/students")}>
         Manage Students
       </button>
 
@@ -27,7 +26,7 @@ function Home() {
 
       <button onClick={() => navigate("/test")}>
         Test Page
-      </button>
+      </button> */}
     </div>
   );
 }
