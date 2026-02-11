@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Dashboard from './pages/admin/dashboard/Dashboard'
+import Home from './pages/Home'
 
 // User imports
 import UserList from './pages/admin/users/UserList'
@@ -36,8 +37,10 @@ function App() {
         <Route path="/admin/students/:id" element={<StudentView />} />
         <Route path="/admin/students" element={<StudentList />} />
         
-        {/* Default route */}
-        <Route path="/" element={<Dashboard />} />
+        {/* Default route
+        <Route path="/" element={<Dashboard />} /> */}
+        <Route path="/" element={<Home />} />
+
         
         {/* 404 route */}
         <Route path="*" element={
