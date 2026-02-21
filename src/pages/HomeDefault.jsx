@@ -18,6 +18,18 @@ function Home() {
 
       <br /><br />
 
+      <button style={{ backgroundColor: "blue", color: "white" }} onClick={() => navigate("/registrar")}>
+        Registrar
+      </button>
+
+      <br /><br />
+
+      <button style={{ backgroundColor: "blue", color: "white" }} onClick={() => navigate("/student")}>
+        Student
+      </button>
+
+      <br /><br />
+
       {/* <button onClick={() => navigate("/admin/students")}>
         Manage Students
       </button>
