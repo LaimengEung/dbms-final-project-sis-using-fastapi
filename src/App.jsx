@@ -1,12 +1,5 @@
-<<<<<<< Updated upstream
-import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Dashboard from './pages/admin/dashboard/Dashboard'
-import Home from './pages/Home'
-=======
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
->>>>>>> Stashed changes
 
 // Home / entry
 import HomeDefault from './pages/HomeDefault';
