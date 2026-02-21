@@ -9,6 +9,10 @@ import ClassEnrollmentPanel from '../../../components/ui/ClassEnrollmentPanel'
 const DashboardFaculty = () => {
   return (
     <FacultyLayout>
+      <div style={{ marginBottom: 20}}>
+        <h1 style={{ fontSize:"20px", fontWeight: "500" }}>Welcome back</h1>
+        <p>Here's what's happening with your courses and students</p>
+      </div>
       <ClassEnrollmentPanel/>
     </FacultyLayout>
   )
