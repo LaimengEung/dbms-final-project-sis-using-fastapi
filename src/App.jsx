@@ -15,6 +15,7 @@ import StudentEdit from './pages/admin/students/StudentEdit'
 import StudentView from './pages/admin/students/StudentView'
 
 import './App.css'
+import DashboardFaculty from './pages/faculty/dashboard/DashboardFaculty'
 
 function App() {
   return (
@@ -25,6 +26,9 @@ function App() {
         
         {/* Admin Dashboard */}
         <Route path="/admin" element={<Dashboard />} />
+
+        {/* Admin Dashboard */}
+        <Route path="/faculty" element={<DashboardFaculty />} />
         
         {/* User routes */}
         <Route path="/admin/users/create" element={<UserCreate />} />
