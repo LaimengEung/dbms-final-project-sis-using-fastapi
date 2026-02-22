@@ -1,21 +1,30 @@
-import React from 'react'
-import FacultyLayout from '../../../components/layout/FacultyLayout'
+import React from "react";
+import FacultyLayout from "../../../components/layout/FacultyLayout";
 
 // Import UI Components
-import EnrollmentBar from '../../../components/ui/EnrollmentBar'
-import ClassEnrollCard from '../../../components/ui/ClassEnrollCard'
-import ClassEnrollmentPanel from '../../../components/ui/ClassEnrollmentPanel'
+import ClassEnrollmentPanel from "./components/ClassEnrollmentPanel";
+import TodaySchedulePanel from "./components/TodaySchedulePanel";
+import GradeSubmissionPanel from "./components/GradeSubmissionPanel";
 
 const DashboardFaculty = () => {
   return (
     <FacultyLayout>
-      <div style={{ marginBottom: 20}}>
-        <h1 style={{ fontSize:"20px", fontWeight: "500" }}>Welcome back</h1>
-        <p>Here's what's happening with your courses and students</p>
+      <div className="Welcome-Section" style={{ marginBottom: 20 }}>
+        <h1
+          className="Welcome-User"
+          style={{ fontSize: "20px", fontWeight: "500" }}
+        >
+          Welcome back
+        </h1>
+        <p classname="Welcome-Subtitle">
+          Here's what's happening with your courses and students
+        </p>
       </div>
-      <ClassEnrollmentPanel/>
+      <ClassEnrollmentPanel />
+      <TodaySchedulePanel />
+      <GradeSubmissionPanel />
     </FacultyLayout>
-  )
-}
+  );
+};
 
-export default DashboardFaculty;    
+export default DashboardFaculty;
