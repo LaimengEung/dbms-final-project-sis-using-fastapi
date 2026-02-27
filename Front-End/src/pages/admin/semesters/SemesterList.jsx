@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import AdminLayout from '../../../components/layout/AdminLayout'
-import { Card, Button, Input, Table, Spinner } from '../../../components/ui'
+import { Alert, Card, Button, Input, Table, Spinner } from '../../../components/ui'
 import semesterService from '../../../services/semesterService'
 
 const initialForm = {
@@ -26,14 +26,16 @@ const SemesterList = () => {
   const [saving, setSaving] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(initialForm)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   const loadSemesters = async () => {
     try {
       setLoading(true)
       const result = await semesterService.getAll()
       setSemesters(result.data || [])
-    } catch (error) {
-      alert(error.response?.data?.message || error.message)
+    } catch (err) {
+      setError(err.message || 'Failed to load semesters.')
     } finally {
       setLoading(false)
     }
@@ -48,6 +50,8 @@ const SemesterList = () => {
   const onSubmit = async (e) => {
     e.preventDefault()
     setSaving(true)
+    setError('')
+    setSuccess('')
     try {
       const payload = {
         ...form,
@@ -55,14 +59,16 @@ const SemesterList = () => {
       }
       if (editingId) {
         await semesterService.update(editingId, payload)
+        setSuccess('Semester updated successfully.')
       } else {
         await semesterService.create(payload)
+        setSuccess('Semester created successfully.')
       }
       setForm(initialForm)
       setEditingId(null)
       await loadSemesters()
-    } catch (error) {
-      alert(error.response?.data?.message || error.message)
+    } catch (err) {
+      setError(err.message || 'Failed to save semester.')
     } finally {
       setSaving(false)
     }
@@ -82,11 +88,14 @@ const SemesterList = () => {
   }
 
   const onSetCurrent = async (id) => {
+    setError('')
+    setSuccess('')
     try {
       await semesterService.setCurrent(id)
+      setSuccess('Current semester updated.')
       await loadSemesters()
-    } catch (error) {
-      alert(error.response?.data?.message || error.message)
+    } catch (err) {
+      setError(err.message || 'Failed to set current semester.')
     }
   }
 
@@ -128,6 +137,9 @@ const SemesterList = () => {
           <h1 className="text-2xl font-bold text-gray-900">Semesters</h1>
           <p className="text-gray-600">Create and manage academic semesters</p>
         </div>
+
+        {error && <Alert type="error" title="Error" message={error} onClose={() => setError('')} />}
+        {success && <Alert type="success" title="Success" message={success} onClose={() => setSuccess('')} />}
 
         <Card className="p-6">
           <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-3">
