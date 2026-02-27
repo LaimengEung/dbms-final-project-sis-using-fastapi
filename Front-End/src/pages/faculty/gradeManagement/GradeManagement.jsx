@@ -4,14 +4,31 @@ import { Alert, Button, Card, Input, Select, Spinner, Table } from '../../../com
 import enrollmentService from '../../../services/enrollmentService';
 import gradeService from '../../../services/gradeService';
 
-const letterFromNumeric = (score) => {
+const numericToGrade = (score) => {
   const n = Number(score);
-  if (Number.isNaN(n)) return '';
-  if (n >= 90) return 'A';
-  if (n >= 80) return 'B';
-  if (n >= 70) return 'C';
-  if (n >= 60) return 'D';
-  return 'F';
+  if (Number.isNaN(n) || score === '') return { letter: '', points: null };
+  if (n >= 93) return { letter: 'A',  points: 4.0 };
+  if (n >= 90) return { letter: 'A-', points: 3.7 };
+  if (n >= 87) return { letter: 'B+', points: 3.3 };
+  if (n >= 83) return { letter: 'B',  points: 3.0 };
+  if (n >= 80) return { letter: 'B-', points: 2.7 };
+  if (n >= 77) return { letter: 'C+', points: 2.3 };
+  if (n >= 73) return { letter: 'C',  points: 2.0 };
+  if (n >= 70) return { letter: 'C-', points: 1.7 };
+  if (n >= 67) return { letter: 'D+', points: 1.3 };
+  if (n >= 63) return { letter: 'D',  points: 1.0 };
+  if (n >= 60) return { letter: 'D-', points: 0.7 };
+  return              { letter: 'F',  points: 0.0 };
+};
+
+const letterBadgeClass = (letter) => {
+  if (!letter) return 'bg-gray-100 text-gray-400';
+  const l = letter.toUpperCase();
+  if (l.startsWith('A')) return 'bg-green-100 text-green-700';
+  if (l.startsWith('B')) return 'bg-blue-100 text-blue-700';
+  if (l.startsWith('C')) return 'bg-yellow-100 text-yellow-700';
+  if (l.startsWith('D')) return 'bg-orange-100 text-orange-700';
+  return 'bg-red-100 text-red-700';
 };
 
 const GradeManagement = () => {
@@ -70,7 +87,9 @@ const GradeManagement = () => {
       const existing = gradeMap[e.enrollment_id];
       const draft = drafts[e.enrollment_id] || {};
       const numeric = draft.numeric_grade ?? existing?.numeric_grade ?? '';
-      const letter = draft.letter_grade ?? existing?.letter_grade ?? (numeric !== '' ? letterFromNumeric(numeric) : '');
+      const { letter, points } = numeric !== ''
+        ? numericToGrade(numeric)
+        : { letter: existing?.letter_grade ?? '', points: existing?.grade_points ?? null };
       return {
         enrollment_id: e.enrollment_id,
         student_name: `${e.student?.user?.first_name || ''} ${e.student?.user?.last_name || ''}`.trim(),
@@ -82,6 +101,7 @@ const GradeManagement = () => {
         semester_id: existing?.semester_id || e.section?.semester?.semester_id || null,
         numeric_grade: numeric,
         letter_grade: letter,
+        grade_points: points,
       };
     });
   }, [enrollments, gradeMap, drafts, sectionFilter]);
@@ -97,9 +117,7 @@ const GradeManagement = () => {
     try {
       const payload = {
         enrollment_id: Number(row.enrollment_id),
-        letter_grade: row.letter_grade || letterFromNumeric(row.numeric_grade),
         numeric_grade: row.numeric_grade === '' ? null : Number(row.numeric_grade),
-        grade_points: null,
         semester_id: row.semester_id || null,
       };
 
@@ -140,11 +158,7 @@ const GradeManagement = () => {
           max="100"
           value={row.numeric_grade}
           onChange={(e) => {
-            const numeric = e.target.value;
-            setDraftValue(row.enrollment_id, {
-              numeric_grade: numeric,
-              letter_grade: numeric === '' ? '' : letterFromNumeric(numeric),
-            });
+            setDraftValue(row.enrollment_id, { numeric_grade: e.target.value });
           }}
           className="w-24"
         />
@@ -154,18 +168,13 @@ const GradeManagement = () => {
       key: 'letter_grade',
       header: 'Letter',
       render: (_, row) => (
-        <Select
-          value={row.letter_grade || ''}
-          onChange={(e) => setDraftValue(row.enrollment_id, { letter_grade: e.target.value })}
-          options={[
-            { value: 'A', label: 'A' },
-            { value: 'B', label: 'B' },
-            { value: 'C', label: 'C' },
-            { value: 'D', label: 'D' },
-            { value: 'F', label: 'F' },
-          ]}
-          className="w-24"
-        />
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-sm font-semibold w-12 justify-center ${
+            letterBadgeClass(row.letter_grade)
+          }`}
+        >
+          {row.letter_grade || '—'}
+        </span>
       ),
     },
     {

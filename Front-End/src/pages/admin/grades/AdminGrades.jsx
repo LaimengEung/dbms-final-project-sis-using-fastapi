@@ -5,7 +5,7 @@ import axios from 'axios'
 const API = 'http://localhost:5002/api'
 
 function getToken() {
-  return localStorage.getItem('token') || sessionStorage.getItem('token') || ''
+  return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken') || ''
 }
 
 function authHeaders() {

@@ -131,7 +131,7 @@ def create_section_for_course(db: Session, course_id: int, payload: dict) -> dic
     if not section_number:
         next_row = db.execute(
             text(
-                "SELECT COALESCE(MAX(NULLIF(REGEXP_REPLACE(section_number, '\\D', '', 'g'), '')::int), 0) + 1 AS next_num "
+                "SELECT COALESCE(MAX(NULLIF(REGEXP_REPLACE(section_number, '[^0-9]', '', 'g'), '')::int), 0) + 1 AS next_num "
                 "FROM class_sections WHERE course_id=:cid AND semester_id=:semid"
             ),
             {"cid": cid, "semid": semester_id},

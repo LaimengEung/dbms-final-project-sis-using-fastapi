@@ -8,11 +8,18 @@ import { useState } from "react";
  */
 
 const getLetterGrade = (score) => {
-  if (score >= 90) return { letter: "A", color: "#15803d", bg: "#dcfce7" };
-  if (score >= 80) return { letter: "B", color: "#1d4ed8", bg: "#dbeafe" };
-  if (score >= 70) return { letter: "C", color: "#a16207", bg: "#fef9c3" };
-  if (score >= 60) return { letter: "D", color: "#c2410c", bg: "#ffedd5" };
-  return { letter: "F", color: "#b91c1c", bg: "#fee2e2" };
+  if (score >= 93) return { letter: "A",  color: "#15803d", bg: "#dcfce7" };
+  if (score >= 90) return { letter: "A-", color: "#15803d", bg: "#dcfce7" };
+  if (score >= 87) return { letter: "B+", color: "#1d4ed8", bg: "#dbeafe" };
+  if (score >= 83) return { letter: "B",  color: "#1d4ed8", bg: "#dbeafe" };
+  if (score >= 80) return { letter: "B-", color: "#1d4ed8", bg: "#dbeafe" };
+  if (score >= 77) return { letter: "C+", color: "#a16207", bg: "#fef9c3" };
+  if (score >= 73) return { letter: "C",  color: "#a16207", bg: "#fef9c3" };
+  if (score >= 70) return { letter: "C-", color: "#a16207", bg: "#fef9c3" };
+  if (score >= 67) return { letter: "D+", color: "#c2410c", bg: "#ffedd5" };
+  if (score >= 63) return { letter: "D",  color: "#c2410c", bg: "#ffedd5" };
+  if (score >= 60) return { letter: "D-", color: "#c2410c", bg: "#ffedd5" };
+  return             { letter: "F",  color: "#b91c1c", bg: "#fee2e2" };
 };
 
 const calcAverage = (grades) => {

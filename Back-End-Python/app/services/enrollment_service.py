@@ -15,7 +15,7 @@ def _normalize_status(value: str, fallback: str = "enrolled") -> str | None:
 
 _ENROLLMENT_SELECT = """
 SELECT e.enrollment_id, e.student_id, e.section_id, e.status, e.enrollment_date,
-       s.student_number, s.gpa AS student_gpa,
+       s.student_number, s.gpa AS student_gpa, s.classification,
        su.first_name AS student_first_name, su.last_name AS student_last_name,
        su.email AS student_email,
        m.major_name,
@@ -54,6 +54,7 @@ def _map_enrollment(r) -> dict:
             "student_id": int(r["student_id"]),
             "student_number": r["student_number"],
             "gpa": float(r["student_gpa"] or 0),
+            "classification": r["classification"] or "-",
             "user": {
                 "first_name": r["student_first_name"],
                 "last_name": r["student_last_name"],

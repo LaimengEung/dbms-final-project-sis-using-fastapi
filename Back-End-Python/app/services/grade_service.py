@@ -5,8 +5,28 @@ from sqlalchemy.orm import Session
 
 LETTER_POINTS = {
     "a": 4.0, "a-": 3.7, "b+": 3.3, "b": 3.0, "b-": 2.7,
-    "c+": 2.3, "c": 2.0, "c-": 1.7, "d+": 1.3, "d": 1.0, "f": 0.0,
+    "c+": 2.3, "c": 2.0, "c-": 1.7, "d+": 1.3, "d": 1.0, "d-": 0.7, "f": 0.0,
 }
+
+
+def _numeric_to_grade(score) -> tuple[str, float]:
+    """Return (letter_grade, grade_points) for a numeric score 0-100."""
+    try:
+        n = float(score)
+    except (TypeError, ValueError):
+        return (None, None)
+    if n >= 93:  return ("A",  4.0)
+    if n >= 90:  return ("A-", 3.7)
+    if n >= 87:  return ("B+", 3.3)
+    if n >= 83:  return ("B",  3.0)
+    if n >= 80:  return ("B-", 2.7)
+    if n >= 77:  return ("C+", 2.3)
+    if n >= 73:  return ("C",  2.0)
+    if n >= 70:  return ("C-", 1.7)
+    if n >= 67:  return ("D+", 1.3)
+    if n >= 63:  return ("D",  1.0)
+    if n >= 60:  return ("D-", 0.7)
+    return             ("F",  0.0)
 
 
 def _map_grade(r) -> dict:
@@ -144,6 +164,8 @@ def _recalculate_student_gpa(db: Session, student_id: int) -> float:
 
 
 def create_grade(db: Session, payload: dict) -> dict:
+    numeric = payload.get("numeric_grade")
+    letter, points = _numeric_to_grade(numeric) if numeric is not None else (payload.get("letter_grade"), payload.get("grade_points"))
     db.execute(
         text(
             "INSERT INTO grades(enrollment_id, letter_grade, numeric_grade, grade_points, "
@@ -152,9 +174,9 @@ def create_grade(db: Session, payload: dict) -> dict:
         ),
         {
             "eid": int(payload["enrollment_id"]),
-            "lg": payload.get("letter_grade"),
-            "ng": float(payload["numeric_grade"]) if payload.get("numeric_grade") is not None else None,
-            "gp": float(payload["grade_points"]) if payload.get("grade_points") is not None else None,
+            "lg": letter,
+            "ng": float(numeric) if numeric is not None else None,
+            "gp": points,
             "semid": int(payload["semester_id"]) if payload.get("semester_id") else None,
             "pd": payload.get("posted_date"),
             "pb": int(payload["posted_by"]) if payload.get("posted_by") else None,
@@ -179,6 +201,13 @@ def update_grade(db: Session, grade_id: int, payload: dict) -> dict | None:
     if not existing:
         return None
 
+    numeric = payload.get("numeric_grade")
+    if numeric is not None:
+        letter, points = _numeric_to_grade(numeric)
+    else:
+        letter = payload.get("letter_grade", existing["letter_grade"])
+        points = payload.get("grade_points", existing["grade_points"])
+
     db.execute(
         text(
             "UPDATE grades SET enrollment_id=:eid, letter_grade=:lg, numeric_grade=:ng, "
@@ -187,9 +216,9 @@ def update_grade(db: Session, grade_id: int, payload: dict) -> dict | None:
         ),
         {
             "eid": int(payload.get("enrollment_id", existing["enrollment_id"])),
-            "lg": payload.get("letter_grade", existing["letter_grade"]),
-            "ng": float(payload["numeric_grade"]) if payload.get("numeric_grade") is not None else None,
-            "gp": float(payload["grade_points"]) if payload.get("grade_points") is not None else None,
+            "lg": letter,
+            "ng": float(numeric) if numeric is not None else None,
+            "gp": points,
             "semid": int(payload["semester_id"]) if payload.get("semester_id") else None,
             "pd": payload.get("posted_date", existing["posted_date"]),
             "pb": int(payload["posted_by"]) if payload.get("posted_by") else None,
