@@ -2,20 +2,21 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import { LayoutDashboard, Users, User, BookCheck, LayoutGrid, Clipboard, FileText, DollarSign, ChartNoAxesColumn, Settings, BookOpen } from "lucide-react";
+import { LayoutDashboard, Users, User, BookCheck, LayoutGrid, Clipboard, FileText, ChartNoAxesColumn, Settings, BookOpen, Building2, GraduationCap, Award } from "lucide-react";
 
 const adminMenu = [
   { icon: <LayoutDashboard />, label: 'Dashboard', path: '/admin' },
   { icon: <Users />, label: 'Users', path: '/admin/users' },
   { icon: <User />, label: 'Students', path: '/admin/students' },
   { icon: <BookCheck />, label: 'Faculty', path: '/admin/faculty' },
+  { icon: <Building2 />, label: 'Departments', path: '/admin/departments' },
+  { icon: <GraduationCap />, label: 'Majors', path: '/admin/majors' },
   { icon: <LayoutGrid />, label: 'Semesters', path: '/admin/semesters' },
   { icon: <BookOpen />, label: 'Courses', path: '/admin/courses' },
   { icon: <Clipboard />, label: 'Sections', path: '/admin/sections' },
   { icon: <FileText />, label: 'Enrollments', path: '/admin/enrollments' },
-  { icon: <DollarSign />, label: 'Finance', path: '/admin/finance' },
+  { icon: <Award />, label: 'Grades', path: '/admin/grades' },
   { icon: <ChartNoAxesColumn />, label: 'Reports', path: '/admin/reports' },
-  { icon: <Settings />, label: 'Settings', path: '/admin/settings' },
 ];
 
 const adminUser = {

@@ -7,9 +7,9 @@ import { LayoutDashboard, BookOpen, Award, ClipboardList, Calendar, Users, Setti
 
 const facultyMenu = [
   { icon: <LayoutDashboard />, label: 'Dashboard', path: '/faculty' },
-  { icon: <BookOpen />, label: 'My Courses', path: '/faculty/myCourses', badge: '3' },
+  { icon: <BookOpen />, label: 'My Courses', path: '/faculty/myCourses' },
   { icon: <Calendar />, label: 'My Schedule', path: '/faculty/mySchedule' },
-  { icon: <Award />, label: 'Grade Management', path: '/faculty/gradeManagement', badge: '12' },
+  { icon: <Award />, label: 'Grade Management', path: '/faculty/gradeManagement' },
   { icon: <ClipboardList />, label: 'Student Requests', path: '/faculty/studentRequests' },
 ];
 
