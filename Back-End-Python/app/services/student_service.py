@@ -249,11 +249,13 @@ def get_student_enrollments(db: Session, student_id: int) -> list:
             """
             SELECT e.enrollment_id, e.section_id, e.status, e.enrollment_date,
                    c.course_code, c.course_name, c.credits,
-                   sem.semester_name, sem.semester_year
+                   sem.semester_name, sem.semester_year,
+                   g.letter_grade AS grade
             FROM enrollments e
             JOIN class_sections cs ON cs.section_id = e.section_id
             JOIN courses c ON c.course_id = cs.course_id
             JOIN semesters sem ON sem.semester_id = cs.semester_id
+            LEFT JOIN grades g ON g.enrollment_id = e.enrollment_id
             WHERE e.student_id = :sid
             ORDER BY e.enrollment_id DESC
             """
@@ -267,12 +269,19 @@ def get_student_enrollments(db: Session, student_id: int) -> list:
             "section_id": int(r["section_id"]),
             "status": r["status"],
             "enrollment_date": r["enrollment_date"],
+            # flat fields expected by the student dashboard Table columns
+            "course_code": r["course_code"],
+            "course_name": r["course_name"],
+            "credits": int(r["credits"] or 0),
+            "semester": f"{r['semester_name']} {r['semester_year']}",
+            "grade": r["grade"],
+            # nested objects kept for other consumers
             "course": {
                 "course_code": r["course_code"],
                 "course_name": r["course_name"],
                 "credits": int(r["credits"] or 0),
             },
-            "semester": {
+            "semester_obj": {
                 "semester_name": r["semester_name"],
                 "semester_year": int(r["semester_year"]),
             },
