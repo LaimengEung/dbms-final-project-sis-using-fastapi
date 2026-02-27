@@ -1,9 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import StudentLayout from '../../../components/layout/StudentLayout';
-import { Alert, Badge, Button, Card, Select, Spinner, Table } from '../../../components/ui';
-import enrollmentService from '../../../services/enrollmentService';
+import { Alert, Badge, Card, Select, Spinner, Table } from '../../../components/ui';
 import semesterService from '../../../services/semesterService';
-import studentService from '../../../services/studentService';
 import api from '../../../services/api';
 
 const CourseCatalog = () => {
@@ -11,20 +9,16 @@ const CourseCatalog = () => {
   const [semesters, setSemesters] = useState([]);
   const [semesterFilter, setSemesterFilter] = useState('');
   const [loading, setLoading] = useState(true);
-  const [enrolling, setEnrolling] = useState(null); // section_id being enrolled
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [studentId, setStudentId] = useState(null);
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
         setError('');
-        const [semRes, secRes, profileRes] = await Promise.all([
+        const [semRes, secRes] = await Promise.all([
           semesterService.getAll({ limit: 100 }),
           api.get('/sections'),
-          studentService.getAll({ limit: 1 }),
         ]);
 
         const semList = Array.isArray(semRes?.data) ? semRes.data : [];
@@ -36,9 +30,6 @@ const CourseCatalog = () => {
 
         const secList = Array.isArray(secRes.data) ? secRes.data : secRes.data?.data || [];
         setSections(secList);
-
-        const student = Array.isArray(profileRes?.data) ? profileRes.data[0] : null;
-        if (student?.student_id) setStudentId(student.student_id);
       } catch (err) {
         setError(err?.response?.data?.message || err?.message || 'Failed to load course catalog.');
       } finally {
@@ -61,36 +52,11 @@ const CourseCatalog = () => {
     [sections, semesterFilter]
   );
 
-  const handleEnroll = async (section) => {
-    if (!studentId) { setError('Student profile not found.'); return; }
-    setError('');
-    setSuccess('');
-    setEnrolling(section.section_id);
-    try {
-      await enrollmentService.create({
-        student_id: studentId,
-        section_id: section.section_id,
-        semester_id: section.semester_id || section.semester?.semester_id,
-      });
-      const label = `${section.course?.course_code || section.course_code} – ${section.course?.course_name || section.course_name}`;
-      setSuccess(`Enrolled in ${label} successfully!`);
-    } catch (err) {
-      const msg = err?.message || err?.detail || 'Enrollment failed.';
-      setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
-    } finally {
-      setEnrolling(null);
-    }
-  };
-
   const columns = [
     { key: 'course_code', header: 'Code', render: (_, row) => row.course?.course_code || row.course_code || '-' },
     { key: 'course_name', header: 'Course', render: (_, row) => row.course?.course_name || row.course_name || '-' },
     { key: 'section_number', header: 'Section' },
-    {
-      key: 'schedule',
-      header: 'Schedule',
-      render: (val) => val || 'TBA',
-    },
+    { key: 'schedule', header: 'Schedule', render: (val) => val || 'TBA' },
     { key: 'credits', header: 'Credits', render: (_, row) => row.course?.credits ?? row.credits ?? '-' },
     {
       key: 'capacity',
@@ -116,19 +82,16 @@ const CourseCatalog = () => {
       },
     },
     {
-      key: 'action',
-      header: '',
+      key: 'status',
+      header: 'Status',
       render: (_, row) => {
         const full = Number(row.enrolled_count || 0) >= Number(row.max_capacity || 1);
+        const status = full ? 'Full' : (row.status || 'open');
+        const color = status === 'open' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
         return (
-          <Button
-            size="sm"
-            disabled={full || enrolling === row.section_id}
-            isLoading={enrolling === row.section_id}
-            onClick={() => handleEnroll(row)}
-          >
-            {full ? 'Full' : 'Enroll'}
-          </Button>
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${color}`}>
+            {status}
+          </span>
         );
       },
     },
@@ -140,7 +103,7 @@ const CourseCatalog = () => {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Course Catalog</h1>
-            <p className="text-gray-600 mt-1">Browse open sections and enroll for the semester.</p>
+            <p className="text-gray-600 mt-1">Browse available sections for the current semester.</p>
           </div>
           <div className="w-72">
             <Select
@@ -154,7 +117,6 @@ const CourseCatalog = () => {
         </div>
 
         {error && <Alert type="error" title="Error" message={error} />}
-        {success && <Alert type="success" title="Enrolled!" message={success} />}
 
         <Card title={`Available Sections${semesterFilter ? '' : ' — All Semesters'}`}>
           {loading ? (

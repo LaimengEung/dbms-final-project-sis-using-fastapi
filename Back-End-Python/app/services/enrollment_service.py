@@ -176,11 +176,9 @@ def create_enrollment(db: Session, payload: dict) -> dict:
             """
             SELECT cs.section_id, cs.max_capacity, cs.status AS section_status,
                    cs.schedule, cs.semester_id, cs.course_id,
-                   sem.is_current, sem.registration_start, sem.registration_end,
                    c.course_code, COALESCE(c.credits,0) AS target_credits,
                    COALESCE(ec.enrolled_count,0) AS enrolled_count
             FROM class_sections cs
-            JOIN semesters sem ON sem.semester_id = cs.semester_id
             JOIN courses c ON c.course_id = cs.course_id
             LEFT JOIN (
                 SELECT section_id, COUNT(*) FILTER (WHERE status='enrolled') AS enrolled_count
@@ -194,16 +192,8 @@ def create_enrollment(db: Session, payload: dict) -> dict:
 
     if not section_row:
         return {"error": {"status": 404, "message": "Section not found"}}
-    if str(section_row["section_status"] or "").lower() != "open":
+    if str(section_row["section_status"] or "").lower() not in ("open", "active"):
         return {"error": {"status": 409, "message": "Section is not open for enrollment"}}
-    if not section_row["is_current"]:
-        return {"error": {"status": 409, "message": "Only current semester sections can be enrolled"}}
-
-    now = datetime.utcnow()
-    reg_start = section_row["registration_start"]
-    reg_end = section_row["registration_end"]
-    if not reg_start or not reg_end or now < reg_start or now > reg_end:
-        return {"error": {"status": 409, "message": "Registration window is closed for this semester"}}
 
     if int(section_row["enrolled_count"]) >= int(section_row["max_capacity"]):
         return {"error": {"status": 409, "message": "Section is full"}}
@@ -214,16 +204,6 @@ def create_enrollment(db: Session, payload: dict) -> dict:
     ).mappings().first()
     if not student:
         return {"error": {"status": 404, "message": "Student not found"}}
-
-    finance_hold = db.execute(
-        text(
-            "SELECT finance_id FROM finance_records "
-            "WHERE student_id=:sid AND semester_id=:semid AND status='pending' LIMIT 1"
-        ),
-        {"sid": student_id, "semid": int(section_row["semester_id"])},
-    ).mappings().first()
-    if finance_hold:
-        return {"error": {"status": 409, "message": "Student has pending finance records for this semester"}}
 
     dup = db.execute(
         text(

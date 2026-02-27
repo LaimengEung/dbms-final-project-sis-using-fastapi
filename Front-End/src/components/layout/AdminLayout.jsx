@@ -2,16 +2,17 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import { LayoutDashboard, Users, User, BookCheck, LayoutGrid, Clipboard, FileText, DollarSign, ChartNoAxesColumn, Settings } from "lucide-react";
+import { LayoutDashboard, Users, User, BookCheck, LayoutGrid, Clipboard, FileText, DollarSign, ChartNoAxesColumn, Settings, BookOpen } from "lucide-react";
 
 const adminMenu = [
   { icon: <LayoutDashboard />, label: 'Dashboard', path: '/admin' },
-  { icon: <Users />, label: 'Users', path: '/admin/users', badge: '3' },
-  { icon: <User />, label: 'Students', path: '/admin/students', badge: '12' },
+  { icon: <Users />, label: 'Users', path: '/admin/users' },
+  { icon: <User />, label: 'Students', path: '/admin/students' },
   { icon: <BookCheck />, label: 'Faculty', path: '/admin/faculty' },
   { icon: <LayoutGrid />, label: 'Semesters', path: '/admin/semesters' },
-  { icon: <Clipboard />, label: 'Enrollments', path: '/admin/enrollments' },
-  { icon: <FileText />, label: 'Grades', path: '/admin/grades' },
+  { icon: <BookOpen />, label: 'Courses', path: '/admin/courses' },
+  { icon: <Clipboard />, label: 'Sections', path: '/admin/sections' },
+  { icon: <FileText />, label: 'Enrollments', path: '/admin/enrollments' },
   { icon: <DollarSign />, label: 'Finance', path: '/admin/finance' },
   { icon: <ChartNoAxesColumn />, label: 'Reports', path: '/admin/reports' },
   { icon: <Settings />, label: 'Settings', path: '/admin/settings' },

@@ -86,10 +86,11 @@ const enrollmentService = {
 
   getSectionsBySemester: async (semesterId) => {
     try {
-      const response = await api.get('/class-sections', {
+      const response = await api.get('/sections', {
         params: { semester_id: semesterId, status: 'open', limit: 100 },
       })
-      return response.data
+      const data = Array.isArray(response.data) ? response.data : response.data?.data || []
+      return { data }
     } catch (error) {
       throw error.response?.data || error.message
     }
@@ -98,7 +99,8 @@ const enrollmentService = {
   getSemesters: async () => {
     try {
       const response = await api.get('/semesters', { params: { limit: 50 } })
-      return response.data
+      const data = Array.isArray(response.data) ? response.data : response.data?.data || []
+      return { data }
     } catch (error) {
       throw error.response?.data || error.message
     }

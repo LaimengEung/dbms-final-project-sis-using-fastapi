@@ -20,15 +20,22 @@ import FacultyList from './pages/admin/faculty/FacultyList';
 import FacultyCreate from './pages/admin/faculty/FacultyCreate';
 import FacultyEdit from './pages/admin/faculty/FacultyEdit';
 import FacultyView from './pages/admin/faculty/FacultyView';
-import SemesterList from './pages/admin/semesters/SemesterList';
-import DashboardFaculty from './pages/faculty/dashboard/DashboardFaculty';
+import SemesterList from './pages/admin/semesters/SemesterList'
+import CourseList from './pages/admin/courses/CourseList'
+import CourseCreate from './pages/admin/courses/CourseCreate'
+import CourseEdit from './pages/admin/courses/CourseEdit'
+import CourseView from './pages/admin/courses/CourseView'
+import SectionList from './pages/admin/sections/SectionList'
+import SectionCreate from './pages/admin/sections/SectionCreate'
+import SectionEdit from './pages/admin/sections/SectionEdit'
+import DashboardFaculty from './pages/faculty/dashboard/DashboardFaculty'
 import MyCourses from './pages/faculty/myCourses/MyCourses';
 import MySchedule from './pages/faculty/mySchedule/MySchedule';
 import DashboardStudent from './pages/student/dashboard/DashboardStudent';
 import MyEnrollments from './pages/student/enrollments/MyEnrollments';
 import MyGrades from './pages/student/grades/MyGrades';
 import CourseCatalog from './pages/student/courses/CourseCatalog';
-import PreRegistration from './pages/student/preRegistration/PreRegistration';
+
 import MyProfile from './pages/student/profile/MyProfile';
 import RoleLogin from './pages/auth/RoleLogin';
 import ChangePassword from './pages/auth/ChangePassword';
@@ -144,14 +151,6 @@ function App() {
             }
           />
           <Route
-            path="/student/pre-registration"
-            element={
-              <ProtectedRoute allowedRoles={['student']}>
-                <PreRegistration />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/student/profile"
             element={
               <ProtectedRoute allowedRoles={['student']}>
@@ -192,6 +191,17 @@ function App() {
 
           {/* Admin Semesters */}
           <Route path="/admin/semesters" element={<AdminRoute><SemesterList /></AdminRoute>} />
+
+          {/* Admin Courses */}
+          <Route path="/admin/courses" element={<AdminRoute><CourseList /></AdminRoute>} />
+          <Route path="/admin/courses/create" element={<AdminRoute><CourseCreate /></AdminRoute>} />
+          <Route path="/admin/courses/edit/:id" element={<AdminRoute><CourseEdit /></AdminRoute>} />
+          <Route path="/admin/courses/:id" element={<AdminRoute><CourseView /></AdminRoute>} />
+
+          {/* Admin Sections */}
+          <Route path="/admin/sections" element={<AdminRoute><SectionList /></AdminRoute>} />
+          <Route path="/admin/sections/create" element={<AdminRoute><SectionCreate /></AdminRoute>} />
+          <Route path="/admin/sections/edit/:id" element={<AdminRoute><SectionEdit /></AdminRoute>} />
 
           {/* Optional legacy support */}
           <Route path="/enrollments" element={<Navigate to="/admin/enrollments" replace />} />

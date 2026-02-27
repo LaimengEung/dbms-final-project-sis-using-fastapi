@@ -167,3 +167,44 @@ def create_section_for_course(db: Session, course_id: int, payload: dict) -> dic
     ).mappings().first()
     db.commit()
     return get_section_by_id(db, int(row["section_id"]))
+
+
+def update_section(db: Session, section_id: int, payload: dict) -> dict | None:
+    check = db.execute(
+        text("SELECT section_id FROM class_sections WHERE section_id = :sid"),
+        {"sid": int(section_id)},
+    ).mappings().first()
+    if not check:
+        return None
+
+    db.execute(
+        text(
+            "UPDATE class_sections SET faculty_id=:fid, classroom=:cls, schedule=:sched, "
+            "start_date=:start, end_date=:end, max_capacity=:cap, status=:status "
+            "WHERE section_id=:sid"
+        ),
+        {
+            "fid": int(payload["faculty_id"]) if payload.get("faculty_id") else None,
+            "cls": payload.get("classroom"),
+            "sched": payload.get("schedule"),
+            "start": payload.get("start_date"),
+            "end": payload.get("end_date"),
+            "cap": int(payload.get("max_capacity", 30)),
+            "status": payload.get("status", "open"),
+            "sid": int(section_id),
+        },
+    )
+    db.commit()
+    return get_section_by_id(db, section_id)
+
+
+def delete_section(db: Session, section_id: int) -> bool:
+    check = db.execute(
+        text("SELECT section_id FROM class_sections WHERE section_id = :sid"),
+        {"sid": int(section_id)},
+    ).mappings().first()
+    if not check:
+        return False
+    db.execute(text("DELETE FROM class_sections WHERE section_id = :sid"), {"sid": int(section_id)})
+    db.commit()
+    return True

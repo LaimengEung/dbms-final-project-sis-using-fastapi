@@ -1,298 +1,321 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button, Card, Input, Select } from '../../../components/ui';
-import EnrollmentForm from './components/EnrollmentForm';
-import enrollmentService from '../../../services/enrollmentService';
-import studentService from '../../../services/studentService';
-import facultyService from '../../../services/facultyService';
-import { courseService } from '../../../services/courseService';
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import AdminLayout from '../../../components/layout/AdminLayout'
+import { Card } from '../../../components/ui'
+import enrollmentService from '../../../services/enrollmentService'
+import { ArrowLeft } from 'lucide-react'
 
 const EnrollmentCreate = () => {
-  const navigate = useNavigate();
-  const [semesters, setSemesters] = useState([]);
-  const [hasStudents, setHasStudents] = useState(false);
-  const [hasSections, setHasSections] = useState(false);
-  const [courses, setCourses] = useState([]);
-  const [faculty, setFaculty] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const [prereqChecked, setPrereqChecked] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [submitError, setSubmitError] = useState('');
-  const [setupMessage, setSetupMessage] = useState('');
-  const [setupError, setSetupError] = useState('');
-  const [creatingCourse, setCreatingCourse] = useState(false);
-  const [creatingSection, setCreatingSection] = useState(false);
-  const [newCourse, setNewCourse] = useState({
-    course_code: '',
-    course_name: '',
-    credits: 3,
-    department_id: '',
-  });
-  const [newSection, setNewSection] = useState({
-    course_id: '',
-    semester_id: '',
-    faculty_id: '',
-    section_number: '',
-    schedule: '',
-    max_capacity: 30,
-    classroom: '',
-  });
+  const navigate = useNavigate()
 
+  const [semesters, setSemesters] = useState([])
+  const [sections, setSections] = useState([])
+  const [students, setStudents] = useState([])
+
+  const [semesterId, setSemesterId] = useState('')
+  const [sectionId, setSectionId] = useState('')
+  const [studentId, setStudentId] = useState('')
+  const [selectedStudent, setSelectedStudent] = useState(null)
+  const [status, setStatus] = useState('enrolled')
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const [loadingSemesters, setLoadingSemesters] = useState(true)
+  const [loadingSections, setLoadingSections] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+
+  const [error, setError] = useState('')
+  const [sectionsError, setSectionsError] = useState('')
+  const [searchError, setSearchError] = useState('')
+
+  const selectedSection = sections.find(s => String(s.section_id) === String(sectionId)) || null
+
+  // Load semesters on mount
   useEffect(() => {
-    const loadPrerequisites = async () => {
+    enrollmentService.getSemesters()
+      .then(res => {
+        const list = res.data || []
+        setSemesters(list)
+        const current = list.find(s => s.is_current)
+        if (current) setSemesterId(String(current.semester_id))
+      })
+      .catch(() => setError('Failed to load semesters.'))
+      .finally(() => setLoadingSemesters(false))
+  }, [])
+
+  // Load sections when semester changes
+  useEffect(() => {
+    setSections([])
+    setSectionId('')
+    setSectionsError('')
+    if (!semesterId) return
+    setLoadingSections(true)
+    enrollmentService.getSectionsBySemester(semesterId)
+      .then(res => setSections(res.data || []))
+      .catch(() => setSectionsError('Failed to load sections for this semester.'))
+      .finally(() => setLoadingSections(false))
+  }, [semesterId])
+
+  // Debounced student search
+  useEffect(() => {
+    setStudents([])
+    setSearchError('')
+    if (searchTerm.length <= 1) return
+    const timer = setTimeout(async () => {
       try {
-        const [semestersRes, studentsRes, sectionsRes, coursesRes, facultyRes, departmentsRes] = await Promise.all([
-          enrollmentService.getSemesters(),
-          studentService.getAll({ limit: 1 }),
-          enrollmentService.getSectionsBySemester(undefined),
-          courseService.getAll(),
-          facultyService.getAll({ limit: 100 }),
-          facultyService.getDepartments(),
-        ]);
-
-        setSemesters(semestersRes.data || []);
-        setHasStudents((studentsRes.data || []).length > 0);
-        setHasSections((sectionsRes.data || []).length > 0);
-        setCourses(Array.isArray(coursesRes?.data) ? coursesRes.data : []);
-        setFaculty(facultyRes?.data || []);
-        setDepartments(departmentsRes?.data || []);
+        setSearchLoading(true)
+        const res = await enrollmentService.searchStudents(searchTerm)
+        setStudents(res.data || [])
+      } catch {
+        setSearchError('Failed to search students.')
       } finally {
-        setPrereqChecked(true);
+        setSearchLoading(false)
       }
-    };
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
 
-    loadPrerequisites();
-  }, []);
+  const handleSelectStudent = (s) => {
+    setStudentId(String(s.student_id))
+    setSelectedStudent(s)
+    setStudents([])
+    setSearchTerm(`${s.user?.first_name || ''} ${s.user?.last_name || ''}`.trim())
+  }
 
-  const refreshPrerequisites = async () => {
-    const [semestersRes, studentsRes, sectionsRes, coursesRes, facultyRes, departmentsRes] = await Promise.all([
-      enrollmentService.getSemesters(),
-      studentService.getAll({ limit: 1 }),
-      enrollmentService.getSectionsBySemester(undefined),
-      courseService.getAll(),
-      facultyService.getAll({ limit: 100 }),
-      facultyService.getDepartments(),
-    ]);
-    setSemesters(semestersRes.data || []);
-    setHasStudents((studentsRes.data || []).length > 0);
-    setHasSections((sectionsRes.data || []).length > 0);
-    setCourses(Array.isArray(coursesRes?.data) ? coursesRes.data : []);
-    setFaculty(facultyRes?.data || []);
-    setDepartments(departmentsRes?.data || []);
-  };
-
-  const missingPrerequisites = prereqChecked && (!semesters.length || !hasStudents || !hasSections || !courses.length || !faculty.length);
-
-  const handleCreateCourse = async () => {
-    setSetupError('');
-    setSetupMessage('');
-    if (!newCourse.course_code || !newCourse.course_name) {
-      setSetupError('Course code and course name are required.');
-      return;
-    }
-    setCreatingCourse(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!semesterId) { setError('Please select a semester.'); return }
+    if (!sectionId)  { setError('Please select a section.'); return }
+    if (!studentId)  { setError('Please select a student.'); return }
     try {
-      await courseService.create({
-        course_code: newCourse.course_code,
-        course_name: newCourse.course_name,
-        credits: Number(newCourse.credits || 3),
-        department_id: newCourse.department_id ? Number(newCourse.department_id) : null,
-      });
-      setSetupMessage('Course created successfully.');
-      setNewCourse({ course_code: '', course_name: '', credits: 3, department_id: '' });
-      await refreshPrerequisites();
-    } catch (error) {
-      setSetupError(error?.response?.data?.message || 'Failed to create course.');
+      setSubmitting(true)
+      setError('')
+      await enrollmentService.create({
+        student_id: Number(studentId),
+        section_id: Number(sectionId),
+        semester_id: Number(semesterId),
+        status,
+      })
+      navigate('/admin/enrollments', { state: { message: 'Student enrolled successfully.' } })
+    } catch (err) {
+      const msg = err?.detail || (typeof err === 'string' ? err : null) || err?.message || 'Failed to create enrollment.'
+      setError(typeof msg === 'string' ? msg : JSON.stringify(msg))
     } finally {
-      setCreatingCourse(false);
+      setSubmitting(false)
     }
-  };
-
-  const handleCreateSection = async () => {
-    setSetupError('');
-    setSetupMessage('');
-    if (!newSection.course_id || !newSection.semester_id) {
-      setSetupError('Course and semester are required to create a section.');
-      return;
-    }
-    setCreatingSection(true);
-    try {
-      await courseService.createSection(newSection.course_id, {
-        semester_id: Number(newSection.semester_id),
-        faculty_id: newSection.faculty_id ? Number(newSection.faculty_id) : null,
-        section_number: newSection.section_number || undefined,
-        max_capacity: Number(newSection.max_capacity || 30),
-        schedule: newSection.schedule || null,
-        classroom: newSection.classroom || null,
-        status: 'open',
-      });
-      setSetupMessage('Section created successfully.');
-      setNewSection({
-        course_id: '',
-        semester_id: '',
-        faculty_id: '',
-        section_number: '',
-        schedule: '',
-        max_capacity: 30,
-        classroom: '',
-      });
-      await refreshPrerequisites();
-    } catch (error) {
-      setSetupError(error?.response?.data?.message || 'Failed to create section.');
-    } finally {
-      setCreatingSection(false);
-    }
-  };
-
-  const handleSubmit = async (data) => {
-    if (missingPrerequisites) return;
-    setLoading(true);
-    setSubmitError('');
-    try {
-      await enrollmentService.create(data);
-      navigate('/admin/enrollments', { state: { message: 'Enrollment created!' } });
-    } catch (error) {
-      setSubmitError(error?.message || 'Failed to create enrollment.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">New Enrollment</h1>
-      <Card className="p-6">
-        {missingPrerequisites && (
-          <div className="mb-4 rounded border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 space-y-2">
-            <div className="font-semibold">Academic setup is incomplete.</div>
-            <ul className="text-sm space-y-1 list-disc pl-5">
-              <li>Semesters: {semesters.length > 0 ? 'Ready' : 'Missing'}</li>
-              <li>Students: {hasStudents ? 'Ready' : 'Missing'}</li>
-              <li>Courses: {courses.length > 0 ? 'Ready' : 'Missing'}</li>
-              <li>Faculty: {faculty.length > 0 ? 'Ready' : 'Missing'}</li>
-              <li>Sections: {hasSections ? 'Ready' : 'Missing'}</li>
-            </ul>
-            <div className="text-sm">
-              Create missing data below, then enrollment will be enabled.
+    <AdminLayout title="New Enrollment">
+      <div className="p-6">
+        {/* Header */}
+        <div className="mb-6 flex items-center gap-4">
+          <button
+            onClick={() => navigate('/admin/enrollments')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">New Enrollment</h1>
+            <p className="text-gray-600">Assign a student to a course section</p>
+          </div>
+        </div>
+
+        {error && (
+          <Card className="mb-6 border-red-200 bg-red-50">
+            <p className="text-red-800 p-4">{error}</p>
+          </Card>
+        )}
+
+        <Card>
+          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+
+            {/* Step 1 — Semester */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Semester <span className="text-red-500">*</span>
+              </label>
+              {loadingSemesters ? (
+                <p className="text-sm text-gray-400">Loading semesters...</p>
+              ) : (
+                <select
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={semesterId}
+                  onChange={e => setSemesterId(e.target.value)}
+                  required
+                >
+                  <option value="">Select semester</option>
+                  {semesters.map(s => (
+                    <option key={s.semester_id} value={s.semester_id}>
+                      {s.semester_name} {s.semester_year}{s.is_current ? ' (Current)' : ''}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
-          </div>
-        )}
-        {submitError && (
-          <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-red-700">
-            {submitError}
-          </div>
-        )}
 
-        {missingPrerequisites && (
-          <div className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card className="p-4">
-              <h3 className="text-lg font-semibold mb-3">Quick Create Course</h3>
-              <div className="space-y-3">
-                <Input
-                  label="Course Code"
-                  value={newCourse.course_code}
-                  onChange={(e) => setNewCourse((prev) => ({ ...prev, course_code: e.target.value }))}
-                  placeholder="CS101"
-                />
-                <Input
-                  label="Course Name"
-                  value={newCourse.course_name}
-                  onChange={(e) => setNewCourse((prev) => ({ ...prev, course_name: e.target.value }))}
-                  placeholder="Introduction to Computing"
-                />
-                <div className="grid grid-cols-2 gap-3">
-                  <Input
-                    label="Credits"
-                    type="number"
-                    min="1"
-                    value={newCourse.credits}
-                    onChange={(e) => setNewCourse((prev) => ({ ...prev, credits: e.target.value }))}
-                  />
-                  <Select
-                    label="Department"
-                    value={newCourse.department_id}
-                    onChange={(e) => setNewCourse((prev) => ({ ...prev, department_id: e.target.value }))}
-                    options={departments.map((d) => ({ value: d.department_id, label: d.department_name }))}
-                  />
+            {/* Step 2 — Section */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Course Section <span className="text-red-500">*</span>
+              </label>
+              {!semesterId ? (
+                <p className="text-sm text-gray-400 italic">Select a semester first.</p>
+              ) : loadingSections ? (
+                <p className="text-sm text-gray-400">Loading sections...</p>
+              ) : (
+                <>
+                  <select
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={sectionId}
+                    onChange={e => setSectionId(e.target.value)}
+                    required
+                  >
+                    <option value="">Select section</option>
+                    {sections.map(s => (
+                      <option key={s.section_id} value={s.section_id}>
+                        {s.course?.course_code || '—'} — {s.course?.course_name || '—'} · Sec {s.section_number} ({s.enrolled_count}/{s.max_capacity} enrolled)
+                      </option>
+                    ))}
+                  </select>
+                  {sectionsError && <p className="text-sm text-red-600 mt-1">{sectionsError}</p>}
+                  {!loadingSections && sections.length === 0 && !sectionsError && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      No open sections for this semester.{' '}
+                      <button
+                        type="button"
+                        onClick={() => navigate('/admin/sections/create')}
+                        className="text-blue-600 underline"
+                      >
+                        Add a section
+                      </button>
+                    </p>
+                  )}
+                </>
+              )}
+
+              {/* Section info card */}
+              {selectedSection && (
+                <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm">
+                  <p className="font-semibold text-blue-900">
+                    {selectedSection.course?.course_code} — {selectedSection.course?.course_name}
+                  </p>
+                  <div className="mt-1 grid grid-cols-2 gap-x-4 text-blue-800">
+                    <span>Credits: {selectedSection.course?.credits ?? '—'}</span>
+                    <span>Section: {selectedSection.section_number}</span>
+                    <span>Schedule: {selectedSection.schedule || 'TBA'}</span>
+                    <span>
+                      Instructor:{' '}
+                      {selectedSection.faculty?.user
+                        ? `${selectedSection.faculty.user.first_name} ${selectedSection.faculty.user.last_name}`
+                        : 'TBA'}
+                    </span>
+                    <span>
+                      Seats:{' '}
+                      <span className={Number(selectedSection.enrolled_count) >= Number(selectedSection.max_capacity) ? 'text-red-700 font-semibold' : 'text-green-700 font-semibold'}>
+                        {selectedSection.enrolled_count}/{selectedSection.max_capacity}
+                      </span>
+                    </span>
+                  </div>
                 </div>
-                <Button onClick={handleCreateCourse} isLoading={creatingCourse}>
-                  Create Course
-                </Button>
-              </div>
-            </Card>
+              )}
+            </div>
 
-            <Card className="p-4">
-              <h3 className="text-lg font-semibold mb-3">Quick Create Section</h3>
-              <div className="space-y-3">
-                <Select
-                  label="Course"
-                  value={newSection.course_id}
-                  onChange={(e) => setNewSection((prev) => ({ ...prev, course_id: e.target.value }))}
-                  options={courses.map((c) => ({ value: c.course_id, label: `${c.course_code} - ${c.course_name}` }))}
-                />
-                <Select
-                  label="Semester"
-                  value={newSection.semester_id}
-                  onChange={(e) => setNewSection((prev) => ({ ...prev, semester_id: e.target.value }))}
-                  options={semesters.map((s) => ({ value: s.semester_id, label: `${s.semester_name} ${s.semester_year}` }))}
-                />
-                <Select
-                  label="Faculty"
-                  value={newSection.faculty_id}
-                  onChange={(e) => setNewSection((prev) => ({ ...prev, faculty_id: e.target.value }))}
-                  options={faculty.map((f) => ({ value: f.faculty_id, label: `${f.first_name} ${f.last_name}` }))}
-                />
-                <div className="grid grid-cols-2 gap-3">
-                  <Input
-                    label="Section No."
-                    value={newSection.section_number}
-                    onChange={(e) => setNewSection((prev) => ({ ...prev, section_number: e.target.value }))}
-                    placeholder="001"
-                  />
-                  <Input
-                    label="Capacity"
-                    type="number"
-                    min="1"
-                    value={newSection.max_capacity}
-                    onChange={(e) => setNewSection((prev) => ({ ...prev, max_capacity: e.target.value }))}
-                  />
+            {/* Step 3 — Student */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Student <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Type name or student number to search..."
+                value={searchTerm}
+                onChange={e => {
+                  setSearchTerm(e.target.value)
+                  setStudentId('')
+                  setSelectedStudent(null)
+                }}
+              />
+              <p className="text-xs text-gray-400 mt-0.5">Type at least 2 characters.</p>
+              {searchLoading && <p className="text-sm text-gray-400 mt-1">Searching...</p>}
+              {searchError && <p className="text-sm text-red-600 mt-1">{searchError}</p>}
+
+              {/* Search results dropdown */}
+              {students.length > 0 && (
+                <div className="mt-1 border border-gray-200 rounded-lg shadow-sm bg-white max-h-52 overflow-auto divide-y divide-gray-100">
+                  {students.map(s => (
+                    <div
+                      key={s.student_id}
+                      className="px-4 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors"
+                      onClick={() => handleSelectStudent(s)}
+                    >
+                      <p className="text-sm font-medium text-gray-900">
+                        {s.user?.first_name} {s.user?.last_name}
+                      </p>
+                      <p className="text-xs text-gray-500">{s.student_number} · {s.major?.major_name || '—'}</p>
+                    </div>
+                  ))}
                 </div>
-                <Input
-                  label="Schedule"
-                  value={newSection.schedule}
-                  onChange={(e) => setNewSection((prev) => ({ ...prev, schedule: e.target.value }))}
-                  placeholder="Mon/Wed 09:00-10:15"
-                />
-                <Input
-                  label="Classroom"
-                  value={newSection.classroom}
-                  onChange={(e) => setNewSection((prev) => ({ ...prev, classroom: e.target.value }))}
-                  placeholder="A-101"
-                />
-                <Button onClick={handleCreateSection} isLoading={creatingSection}>
-                  Create Section
-                </Button>
-              </div>
-            </Card>
-          </div>
-        )}
+              )}
+              {!searchLoading && searchTerm.length > 1 && students.length === 0 && !searchError && !selectedStudent && (
+                <p className="text-sm text-gray-500 mt-1">No students found.</p>
+              )}
 
-        {(setupMessage || setupError) && (
-          <div className={`mb-4 rounded px-4 py-3 ${setupError ? 'border border-red-200 bg-red-50 text-red-700' : 'border border-green-200 bg-green-50 text-green-700'}`}>
-            {setupError || setupMessage}
-          </div>
-        )}
+              {/* Selected student chip */}
+              {selectedStudent && (
+                <div className="mt-2 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2">
+                  <div className="w-8 h-8 rounded-full bg-green-200 flex items-center justify-center text-green-800 text-xs font-bold">
+                    {(selectedStudent.user?.first_name?.[0] || '') + (selectedStudent.user?.last_name?.[0] || '')}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-green-900">
+                      {selectedStudent.user?.first_name} {selectedStudent.user?.last_name}
+                    </p>
+                    <p className="text-xs text-green-700">{selectedStudent.student_number} · {selectedStudent.major?.major_name || '—'}</p>
+                  </div>
+                </div>
+              )}
+            </div>
 
-        <EnrollmentForm 
-          onSubmit={handleSubmit}
-          isLoading={loading}
-          semesters={semesters}
-          disableSubmit={missingPrerequisites}
-          onCancel={() => navigate('/admin/enrollments')}
-        />
-      </Card>
-    </div>
-  );
-};
+            {/* Step 4 — Status */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={status}
+                onChange={e => setStatus(e.target.value)}
+              >
+                <option value="enrolled">Enrolled</option>
+                <option value="dropped">Dropped</option>
+                <option value="withdrawn">Withdrawn</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
 
-export default EnrollmentCreate;
+            {/* Actions */}
+            <div className="flex gap-3 pt-2">
+              <button
+                type="submit"
+                disabled={submitting || !semesterId || !sectionId || !studentId}
+                className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {submitting ? 'Enrolling...' : 'Enroll Student'}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/admin/enrollments')}
+                className="px-5 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </Card>
+      </div>
+    </AdminLayout>
+  )
+}
+
+export default EnrollmentCreate
