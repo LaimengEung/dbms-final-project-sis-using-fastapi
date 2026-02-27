@@ -82,8 +82,15 @@ def update_pre_reg(
 def delete_pre_reg(
     pre_reg_id: int,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_roles("admin", "registrar")),
+    current_user: dict = Depends(require_roles("admin", "registrar", "student")),
 ):
+    # Students can only cancel their own pending pre-registration
+    if current_user["role"] == "student":
+        pre_reg = pre_registration_service.get_pre_reg_by_id(db, pre_reg_id)
+        if not pre_reg:
+            raise HTTPException(status_code=404, detail="Pre-registration not found")
+        if pre_reg.get("student_id") != current_user.get("student_id"):
+            raise HTTPException(status_code=403, detail="Forbidden: cannot cancel another student's pre-registration")
     deleted = pre_registration_service.delete_pre_reg(db, pre_reg_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Pre-registration not found")

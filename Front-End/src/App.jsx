@@ -25,6 +25,11 @@ import DashboardFaculty from './pages/faculty/dashboard/DashboardFaculty';
 import MyCourses from './pages/faculty/myCourses/MyCourses';
 import MySchedule from './pages/faculty/mySchedule/MySchedule';
 import DashboardStudent from './pages/student/dashboard/DashboardStudent';
+import MyEnrollments from './pages/student/enrollments/MyEnrollments';
+import MyGrades from './pages/student/grades/MyGrades';
+import CourseCatalog from './pages/student/courses/CourseCatalog';
+import PreRegistration from './pages/student/preRegistration/PreRegistration';
+import MyProfile from './pages/student/profile/MyProfile';
 import RoleLogin from './pages/auth/RoleLogin';
 import ChangePassword from './pages/auth/ChangePassword';
 import ForgotPassword from './pages/auth/ForgotPassword';
@@ -111,6 +116,46 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['student']}>
                 <DashboardStudent />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/enrollments"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <MyEnrollments />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/grades"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <MyGrades />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/courses"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <CourseCatalog />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/pre-registration"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <PreRegistration />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/profile"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <MyProfile />
               </ProtectedRoute>
             }
           />

@@ -7,9 +7,19 @@ const preRegistrationService = {
     return { data, status: res.status }
   },
 
+  async create(payload) {
+    const res = await api.post('/pre-registrations', payload)
+    return { data: res.data?.data || res.data, status: res.status }
+  },
+
   async update(id, payload) {
     const res = await api.put(`/pre-registrations/${id}`, payload)
     return { data: res.data?.data || res.data, status: res.status }
+  },
+
+  async delete(id) {
+    const res = await api.delete(`/pre-registrations/${id}`)
+    return { status: res.status }
   },
 }
 

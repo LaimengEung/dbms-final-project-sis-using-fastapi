@@ -2,10 +2,15 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import { BookOpen, GraduationCap, LayoutDashboard, Settings, User } from 'lucide-react';
+import { BookOpen, ClipboardList, GraduationCap, LayoutDashboard, Settings, Star, User, BookMarked } from 'lucide-react';
 
 const studentMenu = [
   { icon: <LayoutDashboard />, label: 'Dashboard', path: '/student' },
+  { icon: <ClipboardList />, label: 'My Enrollments', path: '/student/enrollments' },
+  { icon: <Star />, label: 'My Grades', path: '/student/grades' },
+  { icon: <BookOpen />, label: 'Course Catalog', path: '/student/courses' },
+  { icon: <BookMarked />, label: 'Pre-Registration', path: '/student/pre-registration' },
+  { icon: <User />, label: 'My Profile', path: '/student/profile' },
 ];
 
 const getStudentUser = () => {
@@ -37,8 +42,8 @@ const studentNotifications = [
 ];
 
 const studentProfileLinks = [
-  { label: 'My Dashboard', path: '/student', icon: <User size={16} /> },
-  { label: 'Settings', path: '/student', icon: <Settings size={16} /> },
+  { label: 'My Profile', path: '/student/profile', icon: <User size={16} /> },
+  { label: 'Settings', path: '/student/profile', icon: <Settings size={16} /> },
 ];
 
 const StudentLayout = ({ children }) => {
