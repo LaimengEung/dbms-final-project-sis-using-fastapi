@@ -28,6 +28,7 @@ import CourseView from './pages/admin/courses/CourseView'
 import SectionList from './pages/admin/sections/SectionList'
 import SectionCreate from './pages/admin/sections/SectionCreate'
 import SectionEdit from './pages/admin/sections/SectionEdit'
+import Reports from './pages/admin/reports/Reports'
 import DashboardFaculty from './pages/faculty/dashboard/DashboardFaculty'
 import MyCourses from './pages/faculty/myCourses/MyCourses';
 import MySchedule from './pages/faculty/mySchedule/MySchedule';
@@ -202,6 +203,9 @@ function App() {
           <Route path="/admin/sections" element={<AdminRoute><SectionList /></AdminRoute>} />
           <Route path="/admin/sections/create" element={<AdminRoute><SectionCreate /></AdminRoute>} />
           <Route path="/admin/sections/edit/:id" element={<AdminRoute><SectionEdit /></AdminRoute>} />
+
+          {/* Admin Reports */}
+          <Route path="/admin/reports" element={<AdminRoute><Reports /></AdminRoute>} />
 
           {/* Optional legacy support */}
           <Route path="/enrollments" element={<Navigate to="/admin/enrollments" replace />} />
