@@ -17,10 +17,8 @@ from app.routers import (
     departments,
     enrollments,
     faculty,
-    finance,
     grades,
     majors,
-    pre_registrations,
     sections,
     semesters,
     students,
@@ -59,8 +57,6 @@ app.include_router(grades.router)
 app.include_router(sections.router)
 app.include_router(majors.router)
 app.include_router(departments.router)
-app.include_router(finance.router)
-app.include_router(pre_registrations.router)
 app.include_router(degree_requirements.router)
 
 
